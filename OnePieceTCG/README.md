@@ -15,8 +15,11 @@ SwiftUI iOS app (iOS 17+) for logging a One Piece TCG collection.
     and `CardRepository` (the API views use to read/write owned cards —
     never touch SwiftData directly from a view).
   - `Catalog/` — `OP01.json` (bundled OP-01 "Romance Dawn" card data, 121
-    cards) and `CatalogLoader`, which parses it and idempotently seeds the
-    `Card`/`CardSet` catalog on first launch.
+    cards) and `CatalogLoader`. The loader discovers every bundled
+    catalog-set `.json` file (not just OP01) and seeds each one
+    idempotently on first launch, so a future set just needs its JSON file
+    added to `Catalog/` — no loader changes. A set file that fails to
+    parse is logged and skipped rather than blocking the others.
   - `Assets.xcassets`.
 - `OnePieceTCGTests/` — unit test target.
 
