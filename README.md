@@ -5,8 +5,9 @@ and validate decks, browse the full card catalog, and keep an eye on the
 market value of your collection.
 
 > **Status:** early development. The iOS app has a SwiftUI navigation shell
-> scaffolded in `OnePieceTCG/` (see below); everything else on this page is
-> still the product plan guiding what gets built next.
+> scaffolded in `OnePieceTCG/`, and the Android app has a Jetpack Compose
+> navigation shell scaffolded in `android/` (see below); everything else on
+> this page is still the product plan guiding what gets built next.
 
 ## Platform
 
@@ -40,11 +41,12 @@ Native mobile:
 ## Getting started
 
 The iOS shell lives in `OnePieceTCG/` — see [`OnePieceTCG/README.md`](OnePieceTCG/README.md)
-for build/run/test instructions. The Android client hasn't been scaffolded yet.
+for build/run/test instructions. The Android shell lives in `android/` — see
+[`android/README.md`](android/README.md) for build/run/test instructions.
 
 ## Roadmap
 
-1. ~~Scaffold iOS project.~~ Scaffold Android project.
+1. ~~Scaffold iOS project.~~ ~~Scaffold Android project.~~
 2. Integrate a card-database source and seed the local card catalog.
 3. Ship collection tracking (v1).
 4. Add deck building + deck validation.
