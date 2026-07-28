@@ -47,6 +47,38 @@ final class CardRepositoryTests: XCTestCase {
         XCTAssertEqual(owned.first?.quantity, 3)
     }
 
+    func testAddingOwnedCardWithZeroQuantityThrowsAndCreatesNoEntry() throws {
+        let card = makeCard()
+        context.insert(card)
+
+        XCTAssertThrowsError(try repository.addOwnedCard(card, quantity: 0, condition: .nearMint)) { error in
+            XCTAssertEqual(error as? CardRepositoryError, .invalidQuantity(0))
+        }
+        XCTAssertTrue(try repository.fetchOwnedCards().isEmpty)
+    }
+
+    func testAddingOwnedCardWithNegativeQuantityThrowsAndCreatesNoEntry() throws {
+        let card = makeCard()
+        context.insert(card)
+
+        XCTAssertThrowsError(try repository.addOwnedCard(card, quantity: -3, condition: .nearMint)) { error in
+            XCTAssertEqual(error as? CardRepositoryError, .invalidQuantity(-3))
+        }
+        XCTAssertTrue(try repository.fetchOwnedCards().isEmpty)
+    }
+
+    func testAddingZeroQuantityToAnExistingOwnedCardLeavesItUnchanged() throws {
+        let card = makeCard()
+        context.insert(card)
+        try repository.addOwnedCard(card, quantity: 2, condition: .nearMint)
+
+        XCTAssertThrowsError(try repository.addOwnedCard(card, quantity: 0, condition: .nearMint))
+
+        let owned = try repository.fetchOwnedCards()
+        XCTAssertEqual(owned.count, 1)
+        XCTAssertEqual(owned.first?.quantity, 2)
+    }
+
     func testRemovingOwnedCard() throws {
         let card = makeCard()
         context.insert(card)
