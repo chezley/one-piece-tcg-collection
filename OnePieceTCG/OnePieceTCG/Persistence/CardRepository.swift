@@ -1,6 +1,12 @@
 import Foundation
 import SwiftData
 
+enum CardRepositoryError: Error, Equatable {
+    /// Thrown by `addOwnedCard` when passed a non-positive quantity, mirroring
+    /// the floor `updateOwnedCard` already enforces (see issue #17).
+    case invalidQuantity(Int)
+}
+
 /// Repository API for cards and owned cards. UI code depends on this
 /// protocol, never on SwiftData directly, so the persistence framework can
 /// be swapped without touching views.
@@ -41,9 +47,17 @@ final class SwiftDataCardRepository: CardRepository {
 
     @discardableResult
     func addOwnedCard(_ card: Card, quantity: Int = 1, condition: CardCondition = .nearMint) throws -> OwnedCard {
+        guard quantity > 0 else {
+            throw CardRepositoryError.invalidQuantity(quantity)
+        }
+
         if let existing = try existingOwnedCard(for: card) {
             existing.quantity += quantity
-            try modelContext.save()
+            if existing.quantity <= 0 {
+                try removeOwnedCard(existing)
+            } else {
+                try modelContext.save()
+            }
             return existing
         }
 
