@@ -47,6 +47,32 @@ final class CardRepositoryTests: XCTestCase {
         XCTAssertEqual(owned.first?.quantity, 3)
     }
 
+    func testAddingOwnedCardWithZeroQuantityThrowsAndCreatesNoEntry() throws {
+        let card = makeCard()
+        context.insert(card)
+
+        XCTAssertThrowsError(try repository.addOwnedCard(card, quantity: 0, condition: .nearMint)) { error in
+            guard case CardRepositoryError.invalidQuantity(let quantity) = error else {
+                return XCTFail("Expected CardRepositoryError.invalidQuantity, got \(error)")
+            }
+            XCTAssertEqual(quantity, 0)
+        }
+        XCTAssertTrue(try repository.fetchOwnedCards().isEmpty)
+    }
+
+    func testAddingOwnedCardWithNegativeQuantityThrowsAndCreatesNoEntry() throws {
+        let card = makeCard()
+        context.insert(card)
+
+        XCTAssertThrowsError(try repository.addOwnedCard(card, quantity: -3, condition: .nearMint)) { error in
+            guard case CardRepositoryError.invalidQuantity(let quantity) = error else {
+                return XCTFail("Expected CardRepositoryError.invalidQuantity, got \(error)")
+            }
+            XCTAssertEqual(quantity, -3)
+        }
+        XCTAssertTrue(try repository.fetchOwnedCards().isEmpty)
+    }
+
     func testRemovingOwnedCard() throws {
         let card = makeCard()
         context.insert(card)
