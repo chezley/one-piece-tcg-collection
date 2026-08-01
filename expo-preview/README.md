@@ -10,8 +10,11 @@ catalog so what you see on the phone matches what the native apps load.
 
 ## Run it on your iPhone
 
-1. **On the phone:** install **Expo Go** from the App Store. It works on
-   iPhone 17 Pro Max running the current public iOS release.
+1. **On the phone:** install **Expo Go**. This project targets **Expo SDK 54**,
+   so you need an SDK 54 build of Expo Go — if the App Store version has moved
+   past it, grab the matching build from the
+   [Expo Go archive](https://expo.dev/go?sdkVersion=54&platform=ios&device=true).
+   It runs on iPhone 17 Pro Max on the current public iOS release.
 2. **On your computer** (Node 18+ installed), from the repo root:
 
    ```sh
@@ -75,6 +78,11 @@ npx expo export --platform ios   # confirms the app bundles
 
 ## Versions
 
-Expo SDK 57 / React Native 0.86 / React 19.2 — SDK 57 is what the current App
-Store build of Expo Go runs, so no custom dev client is needed. If you update
-the SDK here, the phone's Expo Go has to move with it.
+Expo SDK 54 / React Native 0.81 / React 19.1.
+
+The App Store build of Expo Go tracks the newest SDK, so an SDK 54 project may
+need an **SDK 54 build of Expo Go** rather than whatever is currently on the
+store. If the app fails to open with a message about an unsupported SDK
+version, install the matching build from the
+[Expo Go archive](https://expo.dev/go?sdkVersion=54&platform=ios&device=true).
+Keep this project's SDK and the phone's Expo Go on the same major version.
