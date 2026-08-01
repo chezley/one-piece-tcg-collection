@@ -44,6 +44,11 @@ The iOS shell lives in `OnePieceTCG/` — see [`OnePieceTCG/README.md`](OnePiece
 for build/run/test instructions. The Android shell lives in `android/` — see
 [`android/README.md`](android/README.md) for build/run/test instructions.
 
+To try the UI on a physical phone without Xcode or Android Studio, there is an
+Expo Go preview in `expo-preview/` — `cd expo-preview && npm install && npm start`,
+then scan the QR code. See [`expo-preview/README.md`](expo-preview/README.md).
+It is a testing surface only; the shipping apps remain native Swift and Kotlin.
+
 ## Roadmap
 
 1. ~~Scaffold iOS project.~~ ~~Scaffold Android project.~~
