@@ -76,6 +76,29 @@ npm run typecheck     # TypeScript
 npx expo export --platform ios   # confirms the app bundles
 ```
 
+## Troubleshooting
+
+**It starts the wrong SDK version.** The SDK comes from the `expo` package
+actually installed in `node_modules`, not from `package.json`. After pulling a
+commit that changes the SDK, reinstall — otherwise `npx expo start` keeps
+running the old copy:
+
+```sh
+rm -rf node_modules .expo
+npm install
+npx expo start --clear
+```
+
+Check what you really have with:
+
+```sh
+node -p "require('expo/package.json').version"    # → 54.0.36
+npx expo config --type public | grep sdkVersion   # → '54.0.0'
+```
+
+Also make sure you are running the command from `expo-preview/`. From the repo
+root there is no local install, so `npx` downloads the newest Expo CLI instead.
+
 ## Versions
 
 Expo SDK 54 / React Native 0.81 / React 19.1.
