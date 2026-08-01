@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		12F183828C8428BA2F11B79B /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394CBE29F88856747544F507 /* StatsView.swift */; };
 		34B157334892ED86E6B3BD77 /* BrowseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF34AAA6DB303B369054AEC2 /* BrowseView.swift */; };
+		C1D4F2A08E7B4C6A9D3E5F71 /* CardDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B6A3E1D2C4F48A0B7E6D5C3 /* CardDetailView.swift */; };
 		4226F4E4044AEC2E24679A5E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CAB64DE3894D428F9EEEE60D /* Assets.xcassets */; };
 		85DF7E567C528AF01F194B6D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6CB14B8A2706241641503A7 /* SettingsView.swift */; };
 		957D2DD56D2ABE90BB652B9B /* OnePieceTCGTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052369A9DE63186ECC4C3156 /* OnePieceTCGTests.swift */; };
@@ -47,6 +48,7 @@
 		D4DB5A54888D4094B82D63DC /* OnePieceTCGTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = OnePieceTCGTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6CB14B8A2706241641503A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		EF34AAA6DB303B369054AEC2 /* BrowseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowseView.swift; sourceTree = "<group>"; };
+		9B6A3E1D2C4F48A0B7E6D5C3 /* CardDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardDetailView.swift; sourceTree = "<group>"; };
 		F4CDECACEB1F56A56C800CD5 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
 		26EFC41A8578239FCEB46DB3 /* CardCondition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardCondition.swift; sourceTree = "<group>"; };
 		018C1D15AA55BB5D4D6BE768 /* Card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Card.swift; sourceTree = "<group>"; };
@@ -73,6 +75,7 @@
 			isa = PBXGroup;
 			children = (
 				EF34AAA6DB303B369054AEC2 /* BrowseView.swift */,
+				9B6A3E1D2C4F48A0B7E6D5C3 /* CardDetailView.swift */,
 				5BFA912B7C0E38A18D14B83E /* CollectionView.swift */,
 				F4CDECACEB1F56A56C800CD5 /* RootTabView.swift */,
 				D6CB14B8A2706241641503A7 /* SettingsView.swift */,
@@ -252,6 +255,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				34B157334892ED86E6B3BD77 /* BrowseView.swift in Sources */,
+				C1D4F2A08E7B4C6A9D3E5F71 /* CardDetailView.swift in Sources */,
 				F64F9B0E243534D2684A1262 /* CollectionView.swift in Sources */,
 				9CF5A749AA0E82A4FE176CE8 /* OnePieceTCGApp.swift in Sources */,
 				9ED5146BFD614358BDE88BE3 /* RootTabView.swift in Sources */,
