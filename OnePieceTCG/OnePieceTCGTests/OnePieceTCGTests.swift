@@ -12,4 +12,9 @@ final class OnePieceTCGTests: XCTestCase {
         _ = StatsView()
         _ = SettingsView()
     }
+
+    func testCardDetailViewInstantiates() throws {
+        let card = Card(id: "OP01-001", name: "Monkey D. Luffy", setCode: "OP01", cardNumber: "OP01-001", rarity: "L")
+        _ = CardDetailView(card: card)
+    }
 }
