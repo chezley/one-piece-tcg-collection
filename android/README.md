@@ -31,8 +31,28 @@ a One Piece TCG collection.
       invalid entry, and `updateOwnedCard` removes the entry when quantity
       drops to <= 0 — see #17 for the iOS bug this deliberately avoids
       repeating.
+    - `data/catalog/` — `CatalogLoader`, which discovers every catalog-set
+      JSON file under `assets/catalog/` and seeds the `cards`/`card_sets`
+      tables from them. Idempotent per set (matches existing cards by `id`,
+      so relaunching never duplicates data); a set file that fails to load
+      or parse is logged and skipped rather than blocking the others or
+      crashing. Mirrors the iOS `CatalogLoader`
+      (`../OnePieceTCG/OnePieceTCG/Catalog/CatalogLoader.swift`). Wired up in
+      `MainActivity.onCreate` via `lifecycleScope`, so the catalog seeds once
+      on first launch.
+  - `src/main/assets/catalog/OP01.json` — the OP-01 "Romance Dawn" card
+    catalog (121 cards), reused byte-for-byte from the iOS dataset at
+    `../OnePieceTCG/OnePieceTCG/Catalog/OP01.json` (#4) rather than
+    re-sourced. Note: a handful of card names in this file have a known
+    formatting bug (periods instead of spaces, e.g. "Monkey.D.Luffy") —
+    tracked separately in #20 and intentionally left as-is here so both
+    platforms stay byte-for-byte identical until that ticket fixes it in one
+    place.
   - `src/test/` — JVM unit tests, including `RoomCardRepositoryTest`
-    (Robolectric + in-memory/file-backed Room DB).
+    (Robolectric + in-memory/file-backed Room DB) and `CatalogLoaderTest`
+    (Robolectric, so `assets/` and `org.json` behave as they would
+    on-device: dataset parsing, card count, known-card field spot-checks,
+    malformed/unknown-resource error paths, and idempotent seeding).
 
 ## Build & run
 
@@ -56,8 +76,9 @@ cd android
 A bottom-navigation shell with 4 placeholder tabs: Browse, Collection,
 Stats, Settings — mirroring the iOS shell in `../OnePieceTCG/`. App icon is
 a minimal placeholder to be refined later. A Room-backed local persistence
-layer (`data/`) exists underneath but isn't wired into the screens yet —
-that lands with the catalog-seeding and per-screen tickets.
+layer (`data/`) exists underneath and now seeds itself from the bundled
+OP-01 catalog on first launch, but isn't wired into the screens yet — that
+lands with the per-screen tickets (#26–#29).
 
 ## Known sandbox limitation
 
