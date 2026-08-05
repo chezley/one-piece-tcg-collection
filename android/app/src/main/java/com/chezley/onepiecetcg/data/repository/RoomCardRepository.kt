@@ -18,7 +18,11 @@ class RoomCardRepository(
     override suspend fun fetchCards(setCode: String): List<Card> =
         cardDao.getBySet(setCode).map { it.toDomain() }
 
+    override suspend fun fetchCard(id: String): Card? = cardDao.getById(id)?.toDomain()
+
     override suspend fun fetchOwnedCards(): List<OwnedCard> = ownedCardDao.getAll().map { it.toDomain() }
+
+    override suspend fun fetchOwnedCard(cardId: String): OwnedCard? = ownedCardDao.getByCardId(cardId)?.toDomain()
 
     override suspend fun addOwnedCard(card: Card, quantity: Int, condition: CardCondition): OwnedCard {
         if (quantity <= 0) throw InvalidQuantityException(quantity)

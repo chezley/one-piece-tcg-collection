@@ -16,7 +16,9 @@ class InvalidQuantityException(val quantity: Int) :
 interface CardRepository {
     suspend fun fetchAllCards(): List<Card>
     suspend fun fetchCards(setCode: String): List<Card>
+    suspend fun fetchCard(id: String): Card?
     suspend fun fetchOwnedCards(): List<OwnedCard>
+    suspend fun fetchOwnedCard(cardId: String): OwnedCard?
 
     /**
      * Adds [quantity] copies of [card] to the collection, or increments the

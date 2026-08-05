@@ -12,7 +12,17 @@ a One Piece TCG collection.
     - `MainActivity.kt` — entry point, hosts the Compose content.
     - `navigation/` — `OnePieceDestination` (tab definitions) and
       `RootScaffold` (bottom navigation + `NavHost`).
-    - `ui/screens/` — one placeholder composable per tab.
+    - `ui/screens/` — one placeholder composable per bottom-nav tab (Browse,
+      Collection, Stats, Settings), plus the real `CardDetailScreen` +
+      `CardDetailViewModel` (#26): shows a card's image placeholder, name,
+      set, card number, rarity, cost, power, attribute and type, with an
+      "Owned" switch and a quantity stepper backed directly by
+      `CardRepository` so every change persists immediately (survives
+      navigating away and app relaunch, since it's writing through Room).
+      Reached via the `cardDetail/{cardId}` route (`navigation/
+      CardDetailRoute.kt`) — not a bottom-nav tab itself, so it isn't wired
+      into Browse/Collection yet; that lands with #28/#29 when those tabs
+      have real rows to tap.
     - `ui/theme/` — Material 3 theme (color, type, dynamic color support).
     - `data/model/` — plain Kotlin domain models: `Card`, `CardSet`,
       `OwnedCard`, `CardCondition`. Mirror the iOS SwiftData models in
@@ -30,7 +40,8 @@ a One Piece TCG collection.
       `InvalidQuantityException` for quantity <= 0 instead of creating an
       invalid entry, and `updateOwnedCard` removes the entry when quantity
       drops to <= 0 — see #17 for the iOS bug this deliberately avoids
-      repeating.
+      repeating. `fetchCard(id)` / `fetchOwnedCard(cardId)` (added for #26)
+      look up a single card and its owned-card entry for the detail screen.
     - `data/catalog/` — `CatalogLoader`, which discovers every catalog-set
       JSON file under `assets/catalog/` and seeds the `cards`/`card_sets`
       tables from them. Idempotent per set (matches existing cards by `id`,
@@ -49,10 +60,15 @@ a One Piece TCG collection.
     platforms stay byte-for-byte identical until that ticket fixes it in one
     place.
   - `src/test/` — JVM unit tests, including `RoomCardRepositoryTest`
-    (Robolectric + in-memory/file-backed Room DB) and `CatalogLoaderTest`
+    (Robolectric + in-memory/file-backed Room DB), `CatalogLoaderTest`
     (Robolectric, so `assets/` and `org.json` behave as they would
     on-device: dataset parsing, card count, known-card field spot-checks,
-    malformed/unknown-resource error paths, and idempotent seeding).
+    malformed/unknown-resource error paths, and idempotent seeding), and
+    `CardDetailViewModelTest` (Robolectric + in-memory Room DB +
+    `UnconfinedTestDispatcher` on `Dispatchers.Main`): loading an
+    owned/unowned card, toggling owned on/off, incrementing/decrementing
+    quantity (setting the exact value rather than accumulating), and
+    quantity never going negative.
 
 ## Build & run
 
@@ -73,12 +89,14 @@ cd android
 
 ## What's here
 
-A bottom-navigation shell with 4 placeholder tabs: Browse, Collection,
-Stats, Settings — mirroring the iOS shell in `../OnePieceTCG/`. App icon is
-a minimal placeholder to be refined later. A Room-backed local persistence
-layer (`data/`) exists underneath and now seeds itself from the bundled
-OP-01 catalog on first launch, but isn't wired into the screens yet — that
-lands with the per-screen tickets (#26–#29).
+A bottom-navigation shell with 4 tabs: Browse, Collection, Stats, Settings
+— mirroring the iOS shell in `../OnePieceTCG/`. App icon is a minimal
+placeholder to be refined later. A Room-backed local persistence layer
+(`data/`) exists underneath and seeds itself from the bundled OP-01 catalog
+on first launch. Browse/Collection/Stats/Settings are still placeholders
+(#23, #27–#29 remaining); the card detail screen (#26) is real and reachable via
+the `cardDetail/{cardId}` route, wired to persistence end-to-end — Browse
+and Collection just don't navigate to it yet.
 
 ## Known sandbox limitation
 

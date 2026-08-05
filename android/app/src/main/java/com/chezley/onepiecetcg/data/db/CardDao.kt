@@ -15,4 +15,7 @@ interface CardDao {
 
     @Query("SELECT * FROM cards WHERE setCode = :setCode ORDER BY cardNumber ASC")
     suspend fun getBySet(setCode: String): List<CardEntity>
+
+    @Query("SELECT * FROM cards WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): CardEntity?
 }
