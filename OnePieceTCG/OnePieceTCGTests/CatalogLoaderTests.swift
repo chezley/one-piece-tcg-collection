@@ -39,7 +39,7 @@ final class CatalogLoaderTests: XCTestCase {
         XCTAssertEqual(zoro.power, 5000)
 
         let luffy = try XCTUnwrap(cardsByID["OP01-003"])
-        XCTAssertEqual(luffy.name, "Monkey.D.Luffy")
+        XCTAssertEqual(luffy.name, "Monkey D. Luffy")
         XCTAssertEqual(luffy.type, "Leader")
     }
 
