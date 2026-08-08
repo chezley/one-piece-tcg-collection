@@ -13,7 +13,9 @@ no data/persistence yet.
     - `MainActivity.kt` — entry point, hosts the Compose content.
     - `navigation/` — `OnePieceDestination` (tab definitions) and
       `RootScaffold` (bottom navigation + `NavHost`).
-    - `ui/screens/` — one placeholder composable per tab.
+    - `ui/screens/` — `SettingsScreen` is real (version, About, Open Source
+      Licenses); Browse/Collection/Stats are still placeholders pending
+      #22/#25/#26's data layer.
     - `ui/theme/` — Material 3 theme (color, type, dynamic color support).
   - `src/test/` — JVM unit tests.
 
@@ -36,6 +38,11 @@ cd android
 
 ## What's here
 
-A bottom-navigation shell with 4 placeholder tabs: Browse, Collection,
-Stats, Settings — mirroring the iOS shell in `../OnePieceTCG/`. App icon is
-a minimal placeholder to be refined later.
+A bottom-navigation shell with 4 tabs, mirroring the iOS shell in
+`../OnePieceTCG/`: Browse, Collection, and Stats are still placeholders
+(they need the Room data layer from #22/#25/#26); Settings is a real,
+data-driven list (app version read from `PackageInfo`, About and Open
+Source Licenses dialogs) with no persistence dependency, so future prefs
+like price-tracking currency or theme can be added as new list entries
+without restructuring the screen. App icon is a minimal placeholder to be
+refined later.
