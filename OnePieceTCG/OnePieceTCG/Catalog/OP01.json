@@ -65,7 +65,7 @@
       "cardNumber": "OP01-006",
       "rarity": "UC",
       "cost": 1,
-      "power": null,
+      "power": 0,
       "attribute": "Special",
       "type": "Character",
       "imageURL": "https://en.onepiece-cardgame.com/images/cardlist/card/OP01-006.png"
@@ -450,7 +450,7 @@
       "cardNumber": "OP01-041",
       "rarity": "R",
       "cost": 1,
-      "power": null,
+      "power": 0,
       "attribute": "Slash",
       "type": "Character",
       "imageURL": "https://en.onepiece-cardgame.com/images/cardlist/card/OP01-041.png"
@@ -461,7 +461,7 @@
       "cardNumber": "OP01-042",
       "rarity": "UC",
       "cost": 1,
-      "power": null,
+      "power": 0,
       "attribute": "Wisdom",
       "type": "Character",
       "imageURL": "https://en.onepiece-cardgame.com/images/cardlist/card/OP01-042.png"
