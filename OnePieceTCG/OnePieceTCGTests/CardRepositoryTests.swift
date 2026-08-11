@@ -47,6 +47,37 @@ final class CardRepositoryTests: XCTestCase {
         XCTAssertEqual(owned.first?.quantity, 3)
     }
 
+    func testAddingSameCardWithDifferentConditionsCreatesSeparateRows() throws {
+        let card = makeCard()
+        context.insert(card)
+
+        try repository.addOwnedCard(card, quantity: 1, condition: .nearMint)
+        try repository.addOwnedCard(card, quantity: 1, condition: .damaged)
+
+        let owned = try repository.fetchOwnedCards()
+        XCTAssertEqual(owned.count, 2)
+        let nearMint = owned.first { $0.condition == .nearMint }
+        let damaged = owned.first { $0.condition == .damaged }
+        XCTAssertEqual(nearMint?.quantity, 1)
+        XCTAssertEqual(damaged?.quantity, 1)
+    }
+
+    func testAddingSameCardWithSameConditionTwiceIncrementsThatRowOnly() throws {
+        let card = makeCard()
+        context.insert(card)
+
+        try repository.addOwnedCard(card, quantity: 1, condition: .nearMint)
+        try repository.addOwnedCard(card, quantity: 1, condition: .damaged)
+        try repository.addOwnedCard(card, quantity: 2, condition: .nearMint)
+
+        let owned = try repository.fetchOwnedCards()
+        XCTAssertEqual(owned.count, 2)
+        let nearMint = owned.first { $0.condition == .nearMint }
+        let damaged = owned.first { $0.condition == .damaged }
+        XCTAssertEqual(nearMint?.quantity, 3)
+        XCTAssertEqual(damaged?.quantity, 1)
+    }
+
     func testRemovingOwnedCard() throws {
         let card = makeCard()
         context.insert(card)
