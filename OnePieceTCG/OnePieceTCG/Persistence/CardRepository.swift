@@ -24,7 +24,10 @@ final class SwiftDataCardRepository: CardRepository {
     }
 
     func fetchAllCards() throws -> [Card] {
-        try modelContext.fetch(FetchDescriptor<Card>(sortBy: [SortDescriptor(\.name)]))
+        // Secondary sort by id keeps ordering deterministic across fetches
+        // when names tie (the catalog has genuine duplicates, e.g. two
+        // "Roronoa Zoro" cards in OP01).
+        try modelContext.fetch(FetchDescriptor<Card>(sortBy: [SortDescriptor(\.name), SortDescriptor(\.id)]))
     }
 
     func fetchCards(inSet setCode: String) throws -> [Card] {
@@ -36,7 +39,10 @@ final class SwiftDataCardRepository: CardRepository {
     }
 
     func fetchOwnedCards() throws -> [OwnedCard] {
-        try modelContext.fetch(FetchDescriptor<OwnedCard>(sortBy: [SortDescriptor(\.dateAdded)]))
+        // Secondary sort by id keeps ordering deterministic across fetches
+        // when dateAdded ties (e.g. a bulk import inserting many rows with
+        // the same timestamp).
+        try modelContext.fetch(FetchDescriptor<OwnedCard>(sortBy: [SortDescriptor(\.dateAdded), SortDescriptor(\.id)]))
     }
 
     @discardableResult

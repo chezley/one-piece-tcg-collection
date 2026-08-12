@@ -67,6 +67,38 @@ final class CardRepositoryTests: XCTestCase {
         XCTAssertTrue(try repository.fetchOwnedCards().isEmpty)
     }
 
+    func testFetchAllCardsIsDeterministicWhenNamesTie() throws {
+        // Two cards sharing a name (mirrors real duplicates in the catalog,
+        // e.g. two "Roronoa Zoro" entries in OP01) must still come back in
+        // a stable order across repeated fetches.
+        let cardA = Card(id: "OP01-001", name: "Roronoa Zoro", setCode: "OP01", cardNumber: "OP01-001", rarity: "L")
+        let cardB = Card(id: "OP01-025", name: "Roronoa Zoro", setCode: "OP01", cardNumber: "OP01-025", rarity: "SR")
+        context.insert(cardA)
+        context.insert(cardB)
+
+        let firstFetch = try repository.fetchAllCards().map(\.id)
+        let secondFetch = try repository.fetchAllCards().map(\.id)
+
+        XCTAssertEqual(firstFetch, secondFetch)
+        XCTAssertEqual(Set(firstFetch), Set(["OP01-001", "OP01-025"]))
+    }
+
+    func testFetchOwnedCardsIsDeterministicWhenDateAddedTies() throws {
+        let sharedDate = Date()
+        let cardA = makeCard(id: "OP01-001")
+        let cardB = makeCard(id: "OP01-002")
+        context.insert(cardA)
+        context.insert(cardB)
+        context.insert(OwnedCard(card: cardA, quantity: 1, condition: .nearMint, dateAdded: sharedDate))
+        context.insert(OwnedCard(card: cardB, quantity: 1, condition: .nearMint, dateAdded: sharedDate))
+        try context.save()
+
+        let firstFetch = try repository.fetchOwnedCards().map { $0.card?.id }
+        let secondFetch = try repository.fetchOwnedCards().map { $0.card?.id }
+
+        XCTAssertEqual(firstFetch, secondFetch)
+    }
+
     func testFetchCardsBySet() throws {
         let op01Card = makeCard(id: "OP01-001", setCode: "OP01")
         let op02Card = makeCard(id: "OP02-001", setCode: "OP02")
