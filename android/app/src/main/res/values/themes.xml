@@ -1,3 +1,5 @@
 <resources>
+    <!-- See values-night/themes.xml for the dark counterpart that prevents a
+         light-theme flash on cold start when the system is in dark mode. -->
     <style name="Theme.OnePieceTCG" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

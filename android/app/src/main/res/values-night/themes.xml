@@ -1,0 +1,6 @@
+<resources>
+    <!-- Mirrors values/themes.xml but parents a dark platform theme so the native
+         window (visible before/while Compose inflates on cold start) matches
+         OnePieceTCGTheme's isSystemInDarkTheme() result instead of flashing light. -->
+    <style name="Theme.OnePieceTCG" parent="android:Theme.Material.NoActionBar" />
+</resources>
