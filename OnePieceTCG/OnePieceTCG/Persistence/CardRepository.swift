@@ -16,6 +16,19 @@ protocol CardRepository {
     func removeOwnedCard(_ ownedCard: OwnedCard) throws
 }
 
+// Swift doesn't allow default parameter values on protocol requirements
+// themselves, so the defaults SwiftDataCardRepository.addOwnedCard declares
+// are unreachable through the CardRepository abstraction without this: a
+// defaulted overload that forwards to the full requirement, giving callers
+// holding the protocol type the same `quantity: 1, condition: .nearMint`
+// defaults the concrete type exposes.
+extension CardRepository {
+    @discardableResult
+    func addOwnedCard(_ card: Card, quantity: Int = 1, condition: CardCondition = .nearMint) throws -> OwnedCard {
+        try addOwnedCard(card, quantity: quantity, condition: condition)
+    }
+}
+
 final class SwiftDataCardRepository: CardRepository {
     private let modelContext: ModelContext
 

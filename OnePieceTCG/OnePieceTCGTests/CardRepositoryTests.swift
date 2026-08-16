@@ -67,6 +67,21 @@ final class CardRepositoryTests: XCTestCase {
         XCTAssertTrue(try repository.fetchOwnedCards().isEmpty)
     }
 
+    func testAddingOwnedCardThroughProtocolTypeUsesDefaults() throws {
+        // Regression test for #34: holding the repository as the
+        // `CardRepository` abstraction (not the concrete SwiftData type)
+        // must still allow omitting quantity/condition and get the same
+        // defaults (1, .nearMint) the concrete type exposes.
+        let protocolTypedRepository: CardRepository = repository
+        let card = makeCard()
+        context.insert(card)
+
+        let ownedCard = try protocolTypedRepository.addOwnedCard(card)
+
+        XCTAssertEqual(ownedCard.quantity, 1)
+        XCTAssertEqual(ownedCard.condition, .nearMint)
+    }
+
     func testFetchCardsBySet() throws {
         let op01Card = makeCard(id: "OP01-001", setCode: "OP01")
         let op02Card = makeCard(id: "OP02-001", setCode: "OP02")
