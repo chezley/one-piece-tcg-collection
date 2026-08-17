@@ -4,6 +4,13 @@ import SwiftData
 /// Repository API for cards and owned cards. UI code depends on this
 /// protocol, never on SwiftData directly, so the persistence framework can
 /// be swapped without touching views.
+///
+/// `@MainActor`-isolated because `ModelContext` is confined to the
+/// thread/queue it was created on and is not safe for concurrent access
+/// (see Apple's SwiftData docs). Pinning the whole repository to the main
+/// actor means the compiler enforces that constraint at every call site,
+/// rather than relying on callers to serialize access themselves.
+@MainActor
 protocol CardRepository {
     func fetchAllCards() throws -> [Card]
     func fetchCards(inSet setCode: String) throws -> [Card]
@@ -16,6 +23,7 @@ protocol CardRepository {
     func removeOwnedCard(_ ownedCard: OwnedCard) throws
 }
 
+@MainActor
 final class SwiftDataCardRepository: CardRepository {
     private let modelContext: ModelContext
 

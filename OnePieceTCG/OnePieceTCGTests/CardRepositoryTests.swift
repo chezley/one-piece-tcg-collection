@@ -2,6 +2,7 @@ import XCTest
 import SwiftData
 @testable import OnePieceTCG
 
+@MainActor
 final class CardRepositoryTests: XCTestCase {
     private var container: ModelContainer!
     private var context: ModelContext!
