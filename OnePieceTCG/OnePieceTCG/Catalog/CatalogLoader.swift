@@ -68,6 +68,17 @@ enum CatalogLoader {
                 logger.error("Skipping catalog set '\(resourceName, privacy: .public)': \(String(describing: error), privacy: .public)")
             }
         }
+
+        // Per-set failures above are swallowed so one bad file doesn't take
+        // down the others, but that means a total loss (every set missing or
+        // malformed) would otherwise seed nothing and leave no trace beyond
+        // the per-file `.error` lines. Surface that case at `.fault` so it's
+        // findable in Release device logs instead of just an empty catalog.
+        let totalCardCount = (try? context.fetchCount(FetchDescriptor<Card>())) ?? 0
+        if totalCardCount == 0 {
+            logger.fault("Catalog seeding finished but no cards are present in the store — the app will launch with an empty catalog.")
+        }
+
         return totalInserted
     }
 

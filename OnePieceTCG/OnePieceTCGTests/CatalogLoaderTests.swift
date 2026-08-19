@@ -128,6 +128,23 @@ final class CatalogLoaderTests: XCTestCase {
         XCTAssertEqual(sets.map(\.code), ["TS1"])
     }
 
+    func testSeedingCatalogWithNoValidSetsLeavesAnEmptyCatalogWithoutThrowing() throws {
+        // Every discovered file fails to decode, so nothing seeds. This must
+        // not throw out to the caller (see OnePieceTCGApp.init(), which only
+        // has a top-level catch for launch-time diagnostics) — the empty
+        // result is instead surfaced via a `.fault` log line for visibility.
+        let bundle = try makeSyntheticBundle(
+            datasets: [],
+            extraFiles: ["Broken.json": Data("{ this is not valid json".utf8)]
+        )
+
+        let insertedCount = try CatalogLoader.seedCatalog(into: context, bundle: bundle)
+
+        XCTAssertEqual(insertedCount, 0)
+        XCTAssertTrue(try context.fetch(FetchDescriptor<Card>()).isEmpty)
+        XCTAssertTrue(try context.fetch(FetchDescriptor<CardSet>()).isEmpty)
+    }
+
     // MARK: - Fixture helpers
 
     private func fixture(setCode: String, setName: String, cardIDs: [String]) -> (name: String, data: Data) {
