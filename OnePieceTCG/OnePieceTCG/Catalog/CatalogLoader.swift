@@ -58,12 +58,27 @@ enum CatalogLoader {
 
     /// Seeds the catalog from every set file discovered in `bundle`. Returns
     /// the total number of new cards inserted across all sets.
+    ///
+    /// Fetches the existing `CardSet`/`Card` IDs from `context` once up
+    /// front and keeps them updated in memory across sets, rather than
+    /// re-fetching both full tables from the store for every set file — with
+    /// N bundled sets that turned an O(N) seed pass into an O(N x
+    /// total-cards) one.
     @discardableResult
     static func seedCatalog(into context: ModelContext, bundle: Bundle = .main) throws -> Int {
+        var existingSetCodes = Set(try context.fetch(FetchDescriptor<CardSet>()).map(\.code))
+        var existingCardIDs = Set(try context.fetch(FetchDescriptor<Card>()).map(\.id))
+
         var totalInserted = 0
         for resourceName in discoverDatasetResourceNames(bundle: bundle) {
             do {
-                totalInserted += try seedDataset(resourceName: resourceName, into: context, bundle: bundle)
+                totalInserted += try seedDataset(
+                    resourceName: resourceName,
+                    into: context,
+                    bundle: bundle,
+                    existingSetCodes: &existingSetCodes,
+                    existingCardIDs: &existingCardIDs
+                )
             } catch {
                 logger.error("Skipping catalog set '\(resourceName, privacy: .public)': \(String(describing: error), privacy: .public)")
             }
@@ -76,14 +91,37 @@ enum CatalogLoader {
     /// tests can exercise one dataset without going through discovery.
     @discardableResult
     static func seedDataset(resourceName: String, into context: ModelContext, bundle: Bundle = .main) throws -> Int {
+        var existingSetCodes = Set(try context.fetch(FetchDescriptor<CardSet>()).map(\.code))
+        var existingCardIDs = Set(try context.fetch(FetchDescriptor<Card>()).map(\.id))
+        return try seedDataset(
+            resourceName: resourceName,
+            into: context,
+            bundle: bundle,
+            existingSetCodes: &existingSetCodes,
+            existingCardIDs: &existingCardIDs
+        )
+    }
+
+    /// Core seed step shared by `seedCatalog`/`seedDataset`. Takes the
+    /// existing set-code/card-id membership as inout sets so a caller
+    /// seeding multiple files (`seedCatalog`) can fetch them once and keep
+    /// this step's inserts reflected in memory for the next file, instead of
+    /// re-querying the store every time.
+    private static func seedDataset(
+        resourceName: String,
+        into context: ModelContext,
+        bundle: Bundle,
+        existingSetCodes: inout Set<String>,
+        existingCardIDs: inout Set<String>
+    ) throws -> Int {
         let dataset = try loadDataset(resourceName: resourceName, bundle: bundle)
 
-        let existingSetCodes = Set(try context.fetch(FetchDescriptor<CardSet>()).map(\.code))
-        if !existingSetCodes.contains(dataset.set.code) {
+        let isNewSet = !existingSetCodes.contains(dataset.set.code)
+        if isNewSet {
             context.insert(CardSet(code: dataset.set.code, name: dataset.set.name))
+            existingSetCodes.insert(dataset.set.code)
         }
 
-        let existingCardIDs = Set(try context.fetch(FetchDescriptor<Card>()).map(\.id))
         let newCards = dataset.cards.filter { !existingCardIDs.contains($0.id) }
         for dto in newCards {
             context.insert(
@@ -100,9 +138,10 @@ enum CatalogLoader {
                     imageURL: dto.imageURL
                 )
             )
+            existingCardIDs.insert(dto.id)
         }
 
-        if !newCards.isEmpty || !existingSetCodes.contains(dataset.set.code) {
+        if !newCards.isEmpty || isNewSet {
             try context.save()
         }
         return newCards.count
