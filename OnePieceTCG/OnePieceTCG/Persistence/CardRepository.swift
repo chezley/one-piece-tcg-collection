@@ -41,7 +41,10 @@ final class SwiftDataCardRepository: CardRepository {
 
     @discardableResult
     func addOwnedCard(_ card: Card, quantity: Int = 1, condition: CardCondition = .nearMint) throws -> OwnedCard {
-        if let existing = try existingOwnedCard(for: card) {
+        // Must match on card AND condition: a card owned in multiple conditions
+        // (e.g. a Near Mint copy and a separately-acquired Damaged copy) is
+        // tracked as distinct OwnedCard rows, not merged into one. See #38.
+        if let existing = try existingOwnedCard(for: card, condition: condition) {
             existing.quantity += quantity
             try modelContext.save()
             return existing
@@ -67,10 +70,10 @@ final class SwiftDataCardRepository: CardRepository {
         try modelContext.save()
     }
 
-    private func existingOwnedCard(for card: Card) throws -> OwnedCard? {
+    private func existingOwnedCard(for card: Card, condition: CardCondition) throws -> OwnedCard? {
         let cardID = card.id
         let descriptor = FetchDescriptor<OwnedCard>(
-            predicate: #Predicate { $0.card?.id == cardID }
+            predicate: #Predicate { $0.card?.id == cardID && $0.condition == condition }
         )
         return try modelContext.fetch(descriptor).first
     }
