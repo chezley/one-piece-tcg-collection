@@ -12,7 +12,8 @@ a One Piece TCG collection.
     - `MainActivity.kt` — entry point, hosts the Compose content.
     - `navigation/` — `OnePieceDestination` (tab definitions) and
       `RootScaffold` (bottom navigation + `NavHost`).
-    - `ui/screens/` — one placeholder composable per tab.
+    - `ui/screens/` — one composable per tab (`StatsScreen`/`StatsViewModel`
+      implemented; Browse/Collection/Settings still placeholders).
     - `ui/theme/` — Material 3 theme (color, type, dynamic color support).
     - `data/` — persistence layer, mirroring the iOS SwiftData layer in
       `../OnePieceTCG/OnePieceTCG/{Models,Persistence}`:
@@ -26,8 +27,8 @@ a One Piece TCG collection.
         DAOs directly. `addOwnedCard` throws `InvalidQuantityException` on
         quantity ≤ 0; `updateOwnedCard` removes the entry when quantity
         drops to ≤ 0 (see #17 for the iOS bug this avoids repeating).
-  - `src/test/` — JVM unit tests, including `RoomCardRepositoryTest`
-    (Robolectric + in-memory/file-backed Room DB).
+  - `src/test/` — JVM unit tests: `RoomCardRepositoryTest` and
+    `StatsViewModelTest` (Robolectric + in-memory Room DB).
 
 ## Build & run
 
@@ -48,14 +49,23 @@ cd android
 
 ## What's here
 
-A bottom-navigation shell with 4 placeholder tabs: Browse, Collection,
-Stats, Settings — mirroring the iOS shell in `../OnePieceTCG/`. App icon is
-a minimal placeholder to be refined later.
+A bottom-navigation shell with 4 tabs: Browse, Collection, Stats, Settings —
+mirroring the iOS shell in `../OnePieceTCG/`. App icon is a minimal
+placeholder to be refined later. Browse, Collection, and Settings are still
+placeholders (separate tickets: #26/#28/#29, #23).
 
 Local persistence (Room) backs the collection data: `Card`/`CardSet`
 catalog entities and `OwnedCard` records, behind a `CardRepository`
-abstraction the screens depend on. Screens themselves are still separate
-tickets (#26-#29).
+abstraction the screens depend on.
+
+**Stats** (`ui/screens/StatsScreen.kt` + `StatsViewModel`) is implemented:
+total copies owned, total unique cards owned, and a per-set completion
+percentage (owned unique cards / total cards in that set, keyed by
+`Card.setCode` — `CardRepository` doesn't expose `CardSet` metadata like
+display names yet, so sets are shown by code). An empty state covers zero
+owned cards. The screen recomputes via `StatsViewModel.refresh()` every
+time it re-enters composition (e.g. switching back to the tab), which is
+how it reflects changes made on other screens without an app relaunch.
 
 ## Sandbox build/test caveat
 
