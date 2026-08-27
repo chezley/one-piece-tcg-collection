@@ -67,6 +67,33 @@ final class CardRepositoryTests: XCTestCase {
         XCTAssertTrue(try repository.fetchOwnedCards().isEmpty)
     }
 
+    func testAddingSameCardWithDifferentConditionsCreatesSeparateRows() throws {
+        let card = makeCard()
+        context.insert(card)
+
+        try repository.addOwnedCard(card, quantity: 1, condition: .nearMint)
+        try repository.addOwnedCard(card, quantity: 1, condition: .damaged)
+
+        let owned = try repository.fetchOwnedCards()
+        XCTAssertEqual(owned.count, 2)
+        XCTAssertEqual(owned.first(where: { $0.condition == .nearMint })?.quantity, 1)
+        XCTAssertEqual(owned.first(where: { $0.condition == .damaged })?.quantity, 1)
+    }
+
+    func testAddingSameCardWithSameConditionTwiceIncrementsThatRowOnly() throws {
+        let card = makeCard()
+        context.insert(card)
+
+        try repository.addOwnedCard(card, quantity: 1, condition: .nearMint)
+        try repository.addOwnedCard(card, quantity: 1, condition: .damaged)
+        try repository.addOwnedCard(card, quantity: 2, condition: .nearMint)
+
+        let owned = try repository.fetchOwnedCards()
+        XCTAssertEqual(owned.count, 2)
+        XCTAssertEqual(owned.first(where: { $0.condition == .nearMint })?.quantity, 3)
+        XCTAssertEqual(owned.first(where: { $0.condition == .damaged })?.quantity, 1)
+    }
+
     func testFetchCardsBySet() throws {
         let op01Card = makeCard(id: "OP01-001", setCode: "OP01")
         let op02Card = makeCard(id: "OP02-001", setCode: "OP02")
