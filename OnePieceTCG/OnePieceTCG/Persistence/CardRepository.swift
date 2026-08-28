@@ -39,9 +39,12 @@ final class SwiftDataCardRepository: CardRepository {
         try modelContext.fetch(FetchDescriptor<OwnedCard>(sortBy: [SortDescriptor(\.dateAdded)]))
     }
 
+    // Matching must include `condition`, not just the card id: different physical
+    // copies of the same card (e.g. Near Mint vs. Damaged) are tracked as separate
+    // OwnedCard rows. See #38.
     @discardableResult
     func addOwnedCard(_ card: Card, quantity: Int = 1, condition: CardCondition = .nearMint) throws -> OwnedCard {
-        if let existing = try existingOwnedCard(for: card) {
+        if let existing = try existingOwnedCard(for: card, condition: condition) {
             existing.quantity += quantity
             try modelContext.save()
             return existing
@@ -67,10 +70,10 @@ final class SwiftDataCardRepository: CardRepository {
         try modelContext.save()
     }
 
-    private func existingOwnedCard(for card: Card) throws -> OwnedCard? {
+    private func existingOwnedCard(for card: Card, condition: CardCondition) throws -> OwnedCard? {
         let cardID = card.id
         let descriptor = FetchDescriptor<OwnedCard>(
-            predicate: #Predicate { $0.card?.id == cardID }
+            predicate: #Predicate { $0.card?.id == cardID && $0.condition == condition }
         )
         return try modelContext.fetch(descriptor).first
     }
