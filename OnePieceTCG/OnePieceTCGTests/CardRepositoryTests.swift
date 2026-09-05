@@ -103,4 +103,33 @@ final class CardRepositoryTests: XCTestCase {
         XCTAssertEqual(owned.first?.quantity, 4)
         XCTAssertEqual(owned.first?.condition, .lightlyPlayed)
     }
+
+    func testFetchAllCardsIsDeterministicWhenNamesTie() throws {
+        // Mirrors the real OP01 catalog, which has two "Roronoa Zoro" cards
+        // (OP01-001, OP01-025) sharing a name — see issue #33.
+        let first = Card(id: "OP01-001", name: "Roronoa Zoro", setCode: "OP01", cardNumber: "OP01-001", rarity: "L")
+        let second = Card(id: "OP01-025", name: "Roronoa Zoro", setCode: "OP01", cardNumber: "OP01-025", rarity: "C")
+        context.insert(first)
+        context.insert(second)
+
+        let firstFetch = try repository.fetchAllCards().map(\.id)
+        let secondFetch = try repository.fetchAllCards().map(\.id)
+
+        XCTAssertEqual(firstFetch, secondFetch)
+    }
+
+    func testFetchOwnedCardsIsDeterministicWhenDateAddedTies() throws {
+        let tiedDate = Date()
+        let firstCard = makeCard(id: "OP01-001")
+        let secondCard = makeCard(id: "OP01-002")
+        context.insert(firstCard)
+        context.insert(secondCard)
+        context.insert(OwnedCard(card: firstCard, dateAdded: tiedDate))
+        context.insert(OwnedCard(card: secondCard, dateAdded: tiedDate))
+
+        let firstFetch = try repository.fetchOwnedCards().map { $0.card?.id }
+        let secondFetch = try repository.fetchOwnedCards().map { $0.card?.id }
+
+        XCTAssertEqual(firstFetch, secondFetch)
+    }
 }
