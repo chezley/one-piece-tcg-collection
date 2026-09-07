@@ -46,6 +46,27 @@ xcodebuild -project OnePieceTCG.xcodeproj -scheme OnePieceTCG \
   -destination 'platform=iOS Simulator,name=iPhone 17' test
 ```
 
+## Validate the catalog
+
+`Scripts/validate_catalog.py` is a standalone script (Python 3, no
+Xcode/Swift toolchain needed) that checks the bundled catalog data in
+`OnePieceTCG/Catalog/*.json` for the same integrity rules `CatalogLoader`
+assumes: every set's card count matches the documented official count, every
+card has a non-empty `name`/`rarity`/`cardNumber`, and there are no duplicate
+`(setCode, cardNumber)` pairs across the whole catalog. Failures name the
+offending set file and card rather than a generic assertion.
+
+Run it locally (or in CI) before shipping a catalog change:
+
+```bash
+python3 OnePieceTCG/Scripts/validate_catalog.py
+```
+
+Optionally pass a different catalog directory (e.g. to check a scratch copy)
+as the first argument. When a new set is bundled, add its official card
+count to `OFFICIAL_SET_COUNTS` in the script -- a set missing from that dict
+fails the check loudly instead of being skipped silently.
+
 ## What's here
 
 A tab-based navigation shell with 4 placeholder tabs: Browse, Collection,
