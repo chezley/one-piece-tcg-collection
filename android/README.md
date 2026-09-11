@@ -98,6 +98,24 @@ on first launch. Browse/Collection/Stats/Settings are still placeholders
 the `cardDetail/{cardId}` route, wired to persistence end-to-end — Browse
 and Collection just don't navigate to it yet.
 
+## Note on this layer's history
+
+The Room persistence layer, catalog loader, and card detail screen
+documented above were implemented correctly at least five times across
+prior sessions before actually landing on `main` — each earlier attempt
+was real, complete work that sat on an orphaned branch and was never
+merged (see the comment history on #22/#25/#26 for the full account).
+PR #45 finally merged the most recent, verified version of the stack. If
+a future scheduled review reports these features as "missing" again,
+check whether a fix genuinely regressed versus whether it just needs
+merging — this repo has hit the latter far more often than the former.
+
+While reviewing PR #45 before merge, found that `RoomCardRepository
+.addOwnedCard` matches an existing owned-card row by `cardId` alone,
+ignoring `condition` — the same bug class as #38 on iOS (still unfixed
+there as of this writing). Left unfixed here since it's outside #22's own
+scope and not yet reachable from any Android UI path; tracked as #46.
+
 ## Known sandbox limitation
 
 Some CI/agent sandboxes block outbound access to `dl.google.com` /

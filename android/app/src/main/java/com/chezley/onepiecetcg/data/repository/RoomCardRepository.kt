@@ -27,6 +27,11 @@ class RoomCardRepository(
     override suspend fun addOwnedCard(card: Card, quantity: Int, condition: CardCondition): OwnedCard {
         if (quantity <= 0) throw InvalidQuantityException(quantity)
 
+        // NOTE: matches only on cardId, so a second add() in a *different*
+        // condition silently merges into this row instead of creating its
+        // own (same bug class as #38 on iOS, still unfixed there too).
+        // Not fixed here to keep this ticket (#22) scoped to its own
+        // requirements; tracked separately as #46.
         val existing = ownedCardDao.getByCardId(card.id)
         if (existing != null) {
             val updated = existing.ownedCard.copy(quantity = existing.ownedCard.quantity + quantity)
