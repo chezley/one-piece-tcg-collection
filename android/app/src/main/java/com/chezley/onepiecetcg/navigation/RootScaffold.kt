@@ -11,11 +11,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.chezley.onepiecetcg.ui.screens.BrowseScreen
+import com.chezley.onepiecetcg.ui.screens.CardDetailScreen
 import com.chezley.onepiecetcg.ui.screens.CollectionScreen
 import com.chezley.onepiecetcg.ui.screens.SettingsScreen
 import com.chezley.onepiecetcg.ui.screens.StatsScreen
@@ -62,6 +65,13 @@ fun RootScaffold() {
             composable(OnePieceDestination.Collection.route) { CollectionScreen() }
             composable(OnePieceDestination.Stats.route) { StatsScreen() }
             composable(OnePieceDestination.Settings.route) { SettingsScreen() }
+            composable(
+                route = CardDetailRoute.ROUTE,
+                arguments = listOf(navArgument(CardDetailRoute.ARG_CARD_ID) { type = NavType.StringType }),
+            ) { backStackEntry ->
+                val cardId = backStackEntry.arguments?.getString(CardDetailRoute.ARG_CARD_ID) ?: return@composable
+                CardDetailScreen(cardId = cardId, onBack = { navController.popBackStack() })
+            }
         }
     }
 }
