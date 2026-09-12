@@ -27,7 +27,9 @@ class RoomCardRepository(
     override suspend fun addOwnedCard(card: Card, quantity: Int, condition: CardCondition): OwnedCard {
         if (quantity <= 0) throw InvalidQuantityException(quantity)
 
-        val existing = ownedCardDao.getByCardId(card.id)
+        // Matched on cardId AND condition so a card owned in multiple
+        // conditions gets a separate row per condition (see #46/#38).
+        val existing = ownedCardDao.getByCardIdAndCondition(card.id, condition)
         if (existing != null) {
             val updated = existing.ownedCard.copy(quantity = existing.ownedCard.quantity + quantity)
             ownedCardDao.update(updated)

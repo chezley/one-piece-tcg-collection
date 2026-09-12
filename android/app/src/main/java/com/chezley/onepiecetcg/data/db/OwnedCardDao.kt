@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.chezley.onepiecetcg.data.model.CardCondition
 
 @Dao
 interface OwnedCardDao {
@@ -25,6 +26,14 @@ interface OwnedCardDao {
     @Transaction
     @Query("SELECT * FROM owned_cards WHERE cardId = :cardId LIMIT 1")
     suspend fun getByCardId(cardId: String): OwnedCardWithCard?
+
+    // Condition-aware lookup used by addOwnedCard so that different
+    // conditions of the same card are tracked as separate rows instead of
+    // being merged into whichever row happens to match on cardId alone
+    // (see #46).
+    @Transaction
+    @Query("SELECT * FROM owned_cards WHERE cardId = :cardId AND condition = :condition LIMIT 1")
+    suspend fun getByCardIdAndCondition(cardId: String, condition: CardCondition): OwnedCardWithCard?
 
     @Query("SELECT * FROM owned_cards WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): OwnedCardEntity?

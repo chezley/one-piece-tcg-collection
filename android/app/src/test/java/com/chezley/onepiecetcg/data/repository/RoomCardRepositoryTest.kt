@@ -79,6 +79,33 @@ class RoomCardRepositoryTest {
     }
 
     @Test
+    fun addingSameCardWithDifferentConditionsCreatesSeparateRows() = runBlocking {
+        db.cardDao().insertAll(listOf(luffy.toEntity()))
+
+        repository.addOwnedCard(luffy, quantity = 1, condition = CardCondition.NEAR_MINT)
+        repository.addOwnedCard(luffy, quantity = 1, condition = CardCondition.DAMAGED)
+
+        val owned = repository.fetchOwnedCards()
+        assertEquals(2, owned.size)
+        val byCondition = owned.associateBy { it.condition }
+        assertEquals(1, byCondition.getValue(CardCondition.NEAR_MINT).quantity)
+        assertEquals(1, byCondition.getValue(CardCondition.DAMAGED).quantity)
+    }
+
+    @Test
+    fun addingSameCardWithSameConditionTwiceIncrementsThatRowOnly() = runBlocking {
+        db.cardDao().insertAll(listOf(luffy.toEntity()))
+
+        repository.addOwnedCard(luffy, quantity = 1, condition = CardCondition.DAMAGED)
+        repository.addOwnedCard(luffy, quantity = 2, condition = CardCondition.DAMAGED)
+
+        val owned = repository.fetchOwnedCards()
+        assertEquals(1, owned.size)
+        assertEquals(3, owned.first().quantity)
+        assertEquals(CardCondition.DAMAGED, owned.first().condition)
+    }
+
+    @Test
     fun addingAZeroQuantityThrowsAndCreatesNoEntry() = runBlocking {
         db.cardDao().insertAll(listOf(luffy.toEntity()))
 
