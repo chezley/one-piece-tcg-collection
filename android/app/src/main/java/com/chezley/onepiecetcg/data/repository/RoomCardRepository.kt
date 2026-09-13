@@ -27,21 +27,15 @@ class RoomCardRepository(
     override suspend fun addOwnedCard(card: Card, quantity: Int, condition: CardCondition): OwnedCard {
         if (quantity <= 0) throw InvalidQuantityException(quantity)
 
-        val existing = ownedCardDao.getByCardId(card.id)
-        if (existing != null) {
-            val updated = existing.ownedCard.copy(quantity = existing.ownedCard.quantity + quantity)
-            ownedCardDao.update(updated)
-            return updated.toDomainWith(card)
-        }
-
-        val entity = OwnedCardEntity(
+        // Read-then-write happens inside a single Room @Transaction on the DAO so concurrent
+        // calls for the same card can't both observe "no existing row" and insert a duplicate.
+        val entity = ownedCardDao.upsertOwnedCard(
             cardId = card.id,
             quantity = quantity,
             condition = condition,
             dateAdded = System.currentTimeMillis(),
         )
-        val id = ownedCardDao.insert(entity)
-        return entity.copy(id = id).toDomainWith(card)
+        return entity.toDomainWith(card)
     }
 
     override suspend fun updateOwnedCard(ownedCard: OwnedCard, quantity: Int) {

@@ -7,6 +7,9 @@ import com.chezley.onepiecetcg.data.db.AppDatabase
 import com.chezley.onepiecetcg.data.model.Card
 import com.chezley.onepiecetcg.data.model.CardCondition
 import com.chezley.onepiecetcg.data.db.toEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -98,6 +101,26 @@ class RoomCardRepositoryTest {
         }
 
         assertTrue(repository.fetchOwnedCards().isEmpty())
+    }
+
+    @Test
+    fun concurrentAddOwnedCardCallsForTheSameCardNeverCreateDuplicateRows() = runBlocking {
+        db.cardDao().insertAll(listOf(luffy.toEntity()))
+
+        // Guards against a check-then-act race: overlapping calls for the same card must not
+        // both observe "no existing row" and each insert their own OwnedCardEntity.
+        val concurrentCalls = 20
+        coroutineScope {
+            repeat(concurrentCalls) {
+                launch(Dispatchers.Default) {
+                    repository.addOwnedCard(luffy, quantity = 1)
+                }
+            }
+        }
+
+        val owned = repository.fetchOwnedCards()
+        assertEquals(1, owned.size)
+        assertEquals(concurrentCalls, owned.first().quantity)
     }
 
     @Test
