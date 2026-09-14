@@ -7,7 +7,11 @@ import com.chezley.onepiecetcg.data.db.AppDatabase
 import com.chezley.onepiecetcg.data.model.Card
 import com.chezley.onepiecetcg.data.model.CardCondition
 import com.chezley.onepiecetcg.data.db.toEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -76,6 +80,31 @@ class RoomCardRepositoryTest {
         val owned = repository.fetchOwnedCards()
         assertEquals(1, owned.size)
         assertEquals(4, owned.first().quantity)
+    }
+
+    @Test
+    fun concurrentAddOwnedCardCallsForTheSameCardNeverCreateDuplicateRows() = runBlocking {
+        // Regression test for #47: addOwnedCard used to do a check-then-act
+        // (read existing row, then insert/update) as two separate suspend
+        // calls, so two callers racing for the same card could both read
+        // "no existing row" and both insert, producing duplicate owned_cards
+        // rows. Firing many concurrent calls on real background threads
+        // exercises that race; the fix wraps the read+write in a single
+        // Room @Transaction (OwnedCardDao.upsertQuantity), and SQLite
+        // serializes transactions against one writer, so this must always
+        // converge on exactly one row regardless of thread interleaving.
+        db.cardDao().insertAll(listOf(luffy.toEntity()))
+        val callCount = 20
+
+        withContext(Dispatchers.IO) {
+            (1..callCount).map {
+                async { repository.addOwnedCard(luffy, quantity = 1) }
+            }.awaitAll()
+        }
+
+        val owned = repository.fetchOwnedCards()
+        assertEquals(1, owned.size)
+        assertEquals(callCount, owned.first().quantity)
     }
 
     @Test
