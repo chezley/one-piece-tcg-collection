@@ -136,4 +136,14 @@ class CatalogLoaderTest {
         assertEquals(121, insertedCount)
         assertEquals(121, database.cardDao().getAll().size)
     }
+
+    @Test
+    fun `seedCatalog run twice does not duplicate and does not requery per file`() = runTest {
+        CatalogLoader.seedCatalog(context, database)
+        val secondRunInsertedCount = CatalogLoader.seedCatalog(context, database)
+
+        assertEquals(0, secondRunInsertedCount)
+        assertEquals(121, database.cardDao().getAll().size)
+        assertEquals(1, database.cardSetDao().getAll().size)
+    }
 }

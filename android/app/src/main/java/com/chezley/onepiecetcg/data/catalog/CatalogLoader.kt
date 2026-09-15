@@ -107,12 +107,22 @@ object CatalogLoader {
      * Seeds the catalog from every set file discovered under
      * `assets/catalog/`. Returns the total number of new cards inserted
      * across all sets.
+     *
+     * Fetches the existing set codes/card IDs once up front (rather than
+     * once per set file, as [seedDataset] does in isolation) and threads
+     * them through each file via [insertDataset], which updates those sets
+     * in place as it inserts — so a multi-file pass costs one query per
+     * table instead of O(sets) queries as more sets get bundled (#11/#13).
      */
     suspend fun seedCatalog(context: Context, database: AppDatabase): Int {
+        val existingSetCodes = database.cardSetDao().getAll().map { it.code }.toMutableSet()
+        val existingCardIds = database.cardDao().getAll().map { it.id }.toMutableSet()
+
         var totalInserted = 0
         for (resourceName in discoverDatasetResourceNames(context.assets)) {
             totalInserted += try {
-                seedDataset(resourceName, context.assets, database)
+                val dataset = loadDataset(resourceName, context.assets)
+                insertDataset(dataset, database, existingSetCodes, existingCardIds)
             } catch (e: CatalogLoaderException) {
                 Log.e(LOG_TAG, "Skipping catalog set '$resourceName'", e)
                 0
@@ -128,15 +138,31 @@ object CatalogLoader {
      */
     suspend fun seedDataset(resourceName: String, assets: AssetManager, database: AppDatabase): Int {
         val dataset = loadDataset(resourceName, assets)
+        val existingSetCodes = database.cardSetDao().getAll().map { it.code }.toMutableSet()
+        val existingCardIds = database.cardDao().getAll().map { it.id }.toMutableSet()
+        return insertDataset(dataset, database, existingSetCodes, existingCardIds)
+    }
 
-        val existingSetCodes = database.cardSetDao().getAll().map { it.code }.toSet()
+    /**
+     * Inserts [dataset]'s set/cards that aren't already present in
+     * [existingSetCodes]/[existingCardIds], updating both sets in place so
+     * a caller looping over multiple datasets (see [seedCatalog]) never has
+     * to re-query the store to know what's already there. Returns the
+     * number of new cards inserted for this dataset.
+     */
+    private suspend fun insertDataset(
+        dataset: CatalogDataset,
+        database: AppDatabase,
+        existingSetCodes: MutableSet<String>,
+        existingCardIds: MutableSet<String>,
+    ): Int {
         if (dataset.set.code !in existingSetCodes) {
             database.cardSetDao().insertAll(
                 listOf(CardSetEntity(code = dataset.set.code, name = dataset.set.name, releaseDate = null)),
             )
+            existingSetCodes += dataset.set.code
         }
 
-        val existingCardIds = database.cardDao().getAll().map { it.id }.toSet()
         val newCards = dataset.cards.filter { it.id !in existingCardIds }
         if (newCards.isNotEmpty()) {
             database.cardDao().insertAll(
@@ -155,6 +181,7 @@ object CatalogLoader {
                     )
                 },
             )
+            existingCardIds += newCards.map { it.id }
         }
         return newCards.size
     }
