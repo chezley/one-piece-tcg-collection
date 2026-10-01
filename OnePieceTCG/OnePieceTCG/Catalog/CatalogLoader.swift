@@ -58,12 +58,27 @@ enum CatalogLoader {
 
     /// Seeds the catalog from every set file discovered in `bundle`. Returns
     /// the total number of new cards inserted across all sets.
+    ///
+    /// Fetches the existing `CardSet`/`Card` tables once up front and reuses
+    /// them across every discovered file, rather than each file re-querying
+    /// the full tables just to compute what's already there (see #36) — the
+    /// per-launch cost stays O(sets + total-cards) instead of
+    /// O(sets * total-cards) as more sets get bundled (#11/#13).
     @discardableResult
     static func seedCatalog(into context: ModelContext, bundle: Bundle = .main) throws -> Int {
+        var existingSetCodes = Set(try context.fetch(FetchDescriptor<CardSet>()).map(\.code))
+        var existingCardIDs = Set(try context.fetch(FetchDescriptor<Card>()).map(\.id))
+
         var totalInserted = 0
         for resourceName in discoverDatasetResourceNames(bundle: bundle) {
             do {
-                totalInserted += try seedDataset(resourceName: resourceName, into: context, bundle: bundle)
+                totalInserted += try insertDataset(
+                    resourceName: resourceName,
+                    into: context,
+                    bundle: bundle,
+                    existingSetCodes: &existingSetCodes,
+                    existingCardIDs: &existingCardIDs
+                )
             } catch {
                 logger.error("Skipping catalog set '\(resourceName, privacy: .public)': \(String(describing: error), privacy: .public)")
             }
@@ -76,14 +91,38 @@ enum CatalogLoader {
     /// tests can exercise one dataset without going through discovery.
     @discardableResult
     static func seedDataset(resourceName: String, into context: ModelContext, bundle: Bundle = .main) throws -> Int {
+        var existingSetCodes = Set(try context.fetch(FetchDescriptor<CardSet>()).map(\.code))
+        var existingCardIDs = Set(try context.fetch(FetchDescriptor<Card>()).map(\.id))
+        return try insertDataset(
+            resourceName: resourceName,
+            into: context,
+            bundle: bundle,
+            existingSetCodes: &existingSetCodes,
+            existingCardIDs: &existingCardIDs
+        )
+    }
+
+    /// Inserts one dataset's set/cards using already-known existing-ID sets
+    /// instead of re-querying the store, so callers seeding multiple files
+    /// in one pass (`seedCatalog`) only fetch the current table state once.
+    /// `existingSetCodes`/`existingCardIDs` are updated in place with
+    /// whatever this call inserts, so the next file in the same pass sees
+    /// an up-to-date view without another fetch.
+    private static func insertDataset(
+        resourceName: String,
+        into context: ModelContext,
+        bundle: Bundle,
+        existingSetCodes: inout Set<String>,
+        existingCardIDs: inout Set<String>
+    ) throws -> Int {
         let dataset = try loadDataset(resourceName: resourceName, bundle: bundle)
 
-        let existingSetCodes = Set(try context.fetch(FetchDescriptor<CardSet>()).map(\.code))
-        if !existingSetCodes.contains(dataset.set.code) {
+        let isNewSet = !existingSetCodes.contains(dataset.set.code)
+        if isNewSet {
             context.insert(CardSet(code: dataset.set.code, name: dataset.set.name))
+            existingSetCodes.insert(dataset.set.code)
         }
 
-        let existingCardIDs = Set(try context.fetch(FetchDescriptor<Card>()).map(\.id))
         let newCards = dataset.cards.filter { !existingCardIDs.contains($0.id) }
         for dto in newCards {
             context.insert(
@@ -100,9 +139,10 @@ enum CatalogLoader {
                     imageURL: dto.imageURL
                 )
             )
+            existingCardIDs.insert(dto.id)
         }
 
-        if !newCards.isEmpty || !existingSetCodes.contains(dataset.set.code) {
+        if !newCards.isEmpty || isNewSet {
             try context.save()
         }
         return newCards.count
